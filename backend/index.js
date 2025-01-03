@@ -10,6 +10,8 @@ app.use(cors({credentials: true, origin: 'http://localhost:5000'}))
 
 app.use(express.static('public'))
 
+import { main } from './db/conn.js'
+
 // routes
 import { router as UserRoutes } from './routes/UserRoutes.js'
 
