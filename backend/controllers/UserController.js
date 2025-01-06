@@ -45,4 +45,23 @@ export class UserController {
             res.status(500).json({ message: e })
         }
     }
+
+    static async login(req, res) {
+        const { email, password } = req.body
+
+        if(!email) return res.status(422).json({ message: 'O email é obrigatório!' })
+        if(!password) return res.status(422).json({ message: 'A senha é obrigatória!' })
+        
+        // check if email exist
+        const user = await User.findOne({ email: email })
+
+        if(!user) return res.status(422).json({ message: 'O email não está cadastrado!' })
+
+        // check if password match with db password
+        const checkPassword = await bcrypt.compare(password, user.password)
+
+        if(!checkPassword) return res.status(422).json({ message: 'A senha está incorreta!' })
+
+        await createUserToken(user, req, res)
+    }
 }
