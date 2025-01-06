@@ -1,6 +1,10 @@
-import { createUserToken } from "../helpers/create-user-token.js";
 import { User } from "../models/User.js";
+import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
+
+// helpers
+import { createUserToken } from "../helpers/create-user-token.js";
+import { getToken } from "../helpers/get-token.js";
 
 export class UserController {
     static async register(req, res) {
@@ -63,5 +67,21 @@ export class UserController {
         if(!checkPassword) return res.status(422).json({ message: 'A senha está incorreta!' })
 
         await createUserToken(user, req, res)
+    }
+
+    static async checkUser(req, res) {
+        let currentUser 
+
+        if(req.headers.authorization) {
+            const token = getToken(req)
+            const decoded = jwt.verify(token, 'secretabc123')
+
+            currentUser = await User.findById(decoded.id)
+            currentUser.password = undefined
+        } else {
+            currentUser = null
+        }
+        
+        res.status(200).send(currentUser)
     }
 }
