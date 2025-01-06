@@ -1,3 +1,4 @@
+import { createUserToken } from "../helpers/create-user-token.js";
 import { User } from "../models/User.js";
 import bcrypt from 'bcrypt'
 
@@ -11,7 +12,7 @@ export class UserController {
 
         if(!email) return res.status(422).json({ message: 'O email é obrigatório!' })
     
-        if(!password) return res.status(422).json({ message: 'A senha é obrigatório!' })
+        if(!password) return res.status(422).json({ message: 'A senha é obrigatória!' })
 
         if(!confirmPassword) return res.status(422).json({ message: 'A confirmação de senha é obrigatória!' })
 
@@ -37,11 +38,9 @@ export class UserController {
         })
 
         try{
-            
             const newUser = await user.save()
-            res.status(201).json({ message: 'Usuário criado!', newUser})
+            await createUserToken(newUser, req, res)
             return
-
         } catch(e) {
             res.status(500).json({ message: e })
         }
