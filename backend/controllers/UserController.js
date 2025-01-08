@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt'
 // helpers
 import { createUserToken } from "../helpers/create-user-token.js";
 import { getToken } from "../helpers/get-token.js";
+import { getUserByToken } from "../helpers/get-user-by-token.js";
 
 export class UserController {
     static async register(req, res) {
@@ -96,6 +97,50 @@ export class UserController {
     }
 
     static async editUser(req, res) {
-        return res.status(200).json({ message: 'Edição realizada com sucesso!' })
+        const { name, email, phone, password, confirmPassword } = req.body
+
+        let image = ''
+
+        // check if user exist
+        const token = getToken(req)
+        const user = await getUserByToken(token)
+
+        const userExist = await User.findOne({ email: email })
+        if(user.email !== email && userExist) return res.status(422).json({ message: 'O email está em uso utilize outro!' })
+
+        // validations
+        if(!name) return res.status(422).json({ message: 'O nome é obrigatório!' })
+
+        if(!email) return res.status(422).json({ message: 'O email é obrigatório!' })
+
+        if(!password) return res.status(422).json({ message: 'A senha é obrigatória!' })
+
+        if(!confirmPassword) return res.status(422).json({ message: 'A confirmação de senha é obrigatória!' })
+        
+        if(confirmPassword !== password) { 
+            res.status(422).json({ message: 'A senha e confimação de senha precisam ser iguais!' })
+        } else if(password === confirmPassword && password != null) {
+            const salt = await bcrypt.genSalt(12)
+            const passwordHash = await bcrypt.hash(password, salt)
+
+            user.password = passwordHash
+        }
+        
+        if(!phone) return res.status(422).json({ message: 'O telefone é obrigatório!' })
+
+        // apply put
+        user.name = name
+        user.email = email
+        user.phone = phone
+
+        try {
+
+            //update user
+            const updatedUser = await User.findOneAndUpdate({ _id: user._id }, {$set: user}, { new: true })
+            res.status(200).json({ message: 'Usuário atualizado com sucesso!' })
+
+        }  catch(e) {
+            return res.status(500).json({ message: e })
+        }
     }
 }
