@@ -101,6 +101,10 @@ export class UserController {
 
         let image = ''
 
+        if(req.file) {
+            image = req.file.filename
+        }
+
         // check if user exist
         const token = getToken(req)
         const user = await getUserByToken(token)
@@ -132,6 +136,7 @@ export class UserController {
         user.name = name
         user.email = email
         user.phone = phone
+        user.image = image
 
         try {
 
