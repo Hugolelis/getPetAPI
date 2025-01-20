@@ -11,3 +11,4 @@ router.post('/create', checkToken, imageUpload.array('images'), PetController.cr
 router.get('/mypets', checkToken, PetController.gettAllUserPets)
 router.get('/myadoptions', checkToken, PetController.getAllUserAdoptions)
 router.get('/:id', PetController.getPetByID)
+router.delete('/:id', checkToken, PetController.removePetByID)
