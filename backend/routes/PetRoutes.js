@@ -6,6 +6,8 @@ export const router = express.Router()
 import { checkToken } from "../helpers/verify-token.js";
 import { imageUpload } from "../helpers/image-upload.js"
 
-router.post('/create', checkToken, imageUpload.array('images'), PetController.create)
 router.get('/', PetController.getAll)
+router.post('/create', checkToken, imageUpload.array('images'), PetController.create)
 router.get('/mypets', checkToken, PetController.gettAllUserPets)
+router.get('/myadoptions', checkToken, PetController.getAllUserAdoptions)
+router.get('/:id', PetController.getPetByID)

@@ -1,6 +1,7 @@
 import { getToken } from "../helpers/get-token.js";
 import { getUserByToken } from "../helpers/get-user-by-token.js";
 import { Pet } from "../models/Pet.js";
+import { isValidObjectId } from "mongoose";
 
 export class PetController {
     static async create(req, res) {
@@ -59,5 +60,26 @@ export class PetController {
         const pets = await Pet.find({ 'user._id': user._id }).sort('-createdAt')
 
         res.status(200).json({ pets })
+    }
+
+    static async getAllUserAdoptions(req, res) {
+        const token = getToken(req)
+        const user = await getUserByToken(token)
+
+        const pets = await Pet.find({ 'adopter._id': user._id }).sort('-createdAt')
+
+        res.status(200).json({ pets })
+    }
+
+    static async getPetByID(req, res) {
+        const { id } = req.params
+
+        if(!isValidObjectId(id)) return res.status(422).json({ message: 'ID  inválido!' })
+        
+        const pet = await Pet.findOne({_id: id})
+
+        if(!pet) return res.status(404).json({ message: 'Pet não encontrado!' })
+
+        res.status(200).json({ pet })
     }
 }
