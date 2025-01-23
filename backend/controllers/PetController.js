@@ -111,7 +111,6 @@ export class PetController {
 
         // check if pet exist
         const pet = await Pet.findOne({ _id: id })
-        console.log(pet)
 
         if(!pet) return res.status(404).json({ message: 'Pet não encontrado!' })
 
@@ -141,5 +140,62 @@ export class PetController {
 
         await Pet.findByIdAndUpdate(id, updateData)
         res.status(200).json({ message: "Pet atualizado com sucesso!" })
+    }
+
+    static async schedule(req, res) {
+        const { id } = req.params
+
+        // check if pet exist
+        const pet = await Pet.findOne({ _id: id })
+
+        if(!pet) return res.status(404).json({ message: 'Pet não encontrado!' })
+
+        // check if pet avalible
+        if(pet.available === false) return res.status(404).json({ message: 'O pet ja foi adotado, tente adotar outro!' })
+
+        // check if user register the pet
+        const token = getToken(req)
+        const user = await getUserByToken(token)
+    
+        if(pet.user._id.toString() === user._id.toString() ) return res.status(422).json({ message: 'Você não pode tentar dotar o seu próprio pet!' })
+
+        // check if user has already scheduled a visit
+        if(pet.adopter) {
+            if(pet.adopter._id.equals(user._id)) {
+                res.status(422).json({ message: `Você ja agendou uma visita para esse pet, entre em contato com ${pet.user.name} no telefone ${pet.user.phone}!` })
+            }
+            return
+        }
+
+        // add user to pet
+        pet.adopter = {
+            _id: user._id,
+            name: user.name,
+            image: user.image 
+        }
+
+        await Pet.findByIdAndUpdate(id, pet)
+        res.status(200).json({ message: `A visita foi agendada com sucesso, entre em contato com ${pet.user.name} pelo telefone ${pet.user.phone}` })
+    }
+
+    static async concludeAdoption(req, res) {
+        const { id } = req.params
+
+        // check if pet exist
+        const pet = await Pet.findOne({ _id: id })
+
+        if(!pet) return res.status(404).json({ message: 'Pet não encontrado!' })
+
+        // check if pet belongs logged user
+        const token = getToken(req)
+        const user = await getUserByToken(token)
+            
+        if(pet.user._id.toString() === user._id.toString() ) return res.status(422).json({ message: 'Houve um problema em processar a sua solicitação!' })
+
+        pet.available = false
+
+        await Pet.findByIdAndUpdate(id, pet)
+
+        res.status(200).json({ message: 'Parabéns o cilco de adoção foi realizado com sucesso!' })
     }
 }
